@@ -7,6 +7,10 @@ datasource db {
   provider = "postgresql"
 }
 
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
 enum Role {
   ADMIN
   ORGANIZER
@@ -27,73 +31,151 @@ enum ApplicationStatus {
   WITHDRAWN
 }
 
+// ---------------------------------------------------------------------------
+// User  — minimal auth record; role-specific data lives in profile tables
+// ---------------------------------------------------------------------------
+
 model User {
-  id            String        @id @default(cuid())
-  email         String        @unique
-  name          String?
-  role          Role          @default(VENDOR)
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  role      Role     @default(VENDOR)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  // Organizer relations
-  events        Event[]       @relation("OrganizerEvents")
-  auditLogs     AuditLog[]
-
-  // Vendor relations
-  applications  Application[]
+  organizerProfile OrganizerProfile?
+  vendorProfile    VendorProfile?
+  auditLogs        AuditLog[]
 
   @@map("users")
 }
 
+// ---------------------------------------------------------------------------
+// OrganizerProfile — extra fields for municipalities / facility owners
+// ---------------------------------------------------------------------------
+
+model OrganizerProfile {
+  id               String   @id @default(cuid())
+  organizationName String
+  contactPhone     String?
+  website          String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  events Event[]
+
+  @@map("organizer_profiles")
+}
+
+// ---------------------------------------------------------------------------
+// VendorProfile — shop / stall details
+// ---------------------------------------------------------------------------
+
+model VendorProfile {
+  id           String   @id @default(cuid())
+  shopName     String
+  description  String?
+  category     String?  // e.g. "food", "crafts", "produce"
+  contactPhone String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  applications Application[]
+  documents    Document[]
+
+  @@map("vendor_profiles")
+}
+
+// ---------------------------------------------------------------------------
+// Event — a market / fair that organizers publish
+// ---------------------------------------------------------------------------
+
 model Event {
-  id            String        @id @default(cuid())
-  title         String
-  description   String?
-  location      String?
-  eventDate     DateTime
-  deadline      DateTime      // application deadline
-  status        EventStatus   @default(DRAFT)
-  maxVendors    Int?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  id          String      @id @default(cuid())
+  title       String
+  description String?
+  location    String?
+  eventDate   DateTime
+  deadline    DateTime    // application deadline
+  status      EventStatus @default(DRAFT)
+  maxVendors  Int?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 
-  organizerId   String
-  organizer     User          @relation("OrganizerEvents", fields: [organizerId], references: [id])
+  organizerId String
+  organizer   OrganizerProfile @relation(fields: [organizerId], references: [id])
 
-  applications  Application[]
-  auditLogs     AuditLog[]
+  applications Application[]
+  auditLogs    AuditLog[]
 
   @@map("events")
 }
 
+// ---------------------------------------------------------------------------
+// Application — a vendor applying to an event
+// ---------------------------------------------------------------------------
+
 model Application {
-  id            String            @id @default(cuid())
-  message       String?
-  status        ApplicationStatus @default(PENDING)
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
+  id        String            @id @default(cuid())
+  message   String?           // cover note from vendor
+  status    ApplicationStatus @default(PENDING)
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
 
-  vendorId      String
-  vendor        User              @relation(fields: [vendorId], references: [id])
+  vendorId String
+  vendor   VendorProfile @relation(fields: [vendorId], references: [id])
 
-  eventId       String
-  event         Event             @relation(fields: [eventId], references: [id])
+  eventId String
+  event   Event @relation(fields: [eventId], references: [id])
+
+  auditLogs AuditLog[]
 
   @@unique([vendorId, eventId])
   @@map("applications")
 }
 
+// ---------------------------------------------------------------------------
+// Document — file metadata (MVP stores path/URL only, no blob)
+// ---------------------------------------------------------------------------
+
+model Document {
+  id        String   @id @default(cuid())
+  fileName  String
+  fileUrl   String   // S3 / Vercel Blob URL
+  mimeType  String?
+  sizeBytes Int?
+  createdAt DateTime @default(now())
+
+  vendorId String
+  vendor   VendorProfile @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+  @@map("documents")
+}
+
+// ---------------------------------------------------------------------------
+// AuditLog — immutable record of organizer decisions
+// ---------------------------------------------------------------------------
+
 model AuditLog {
-  id            String   @id @default(cuid())
-  action        String   // e.g. "APPLICATION_ACCEPTED", "EVENT_PUBLISHED"
-  details       String?
-  createdAt     DateTime @default(now())
+  id        String   @id @default(cuid())
+  action    String   // e.g. "APPLICATION_ACCEPTED", "EVENT_PUBLISHED"
+  details   String?
+  createdAt DateTime @default(now())
 
-  userId        String
-  user          User     @relation(fields: [userId], references: [id])
+  userId String
+  user   User @relation(fields: [userId], references: [id])
 
-  eventId       String?
-  event         Event?   @relation(fields: [eventId], references: [id])
+  eventId String?
+  event   Event? @relation(fields: [eventId], references: [id])
+
+  applicationId String?
+  application   Application? @relation(fields: [applicationId], references: [id])
 
   @@map("audit_logs")
 }

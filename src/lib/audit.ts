@@ -4,6 +4,7 @@ interface AuditEntry {
   userId: string;
   action: string;
   eventId?: string;
+  applicationId?: string;
   details?: string;
 }
 
@@ -17,6 +18,7 @@ export const logAudit = async (entry: AuditEntry) => {
       userId: entry.userId,
       action: entry.action,
       eventId: entry.eventId ?? null,
+      applicationId: entry.applicationId ?? null,
       details: entry.details ?? null,
     },
   });
