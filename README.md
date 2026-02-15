@@ -1,36 +1,87 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Marchen — Market Management Platform
 
-## Getting Started
+MVP connecting **Organizers** (municipalities, facilities, shopping streets) with **Vendors** (shops, stalls) to run markets.
 
-First, run the development server:
+## Quick Start
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+# 1. Install dependencies
+pnpm install
+
+# 2. Set up environment
+cp .env.example .env
+# Edit .env with your PostgreSQL connection string (e.g. Neon, local Postgres)
+
+# 3. Run migrations
+pnpm db:migrate
+
+# 4. Seed sample data
+pnpm db:seed
+
+# 5. Start dev server
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Command            | Description                          |
+| ------------------ | ------------------------------------ |
+| `pnpm dev`         | Start dev server (Turbopack)         |
+| `pnpm build`       | Production build                     |
+| `pnpm lint`        | Run ESLint                           |
+| `pnpm db:generate` | Regenerate Prisma client             |
+| `pnpm db:migrate`  | Create & apply migrations            |
+| `pnpm db:seed`     | Seed database with sample data       |
+| `pnpm db:reset`    | Reset database (drop + migrate + seed) |
 
-## Learn More
+## Tech Stack
 
-To learn more about Next.js, take a look at the following resources:
+- **Next.js 16** (App Router) + TypeScript (strict)
+- **Tailwind CSS** for styling
+- **Prisma 7** + PostgreSQL (Neon-compatible)
+- **pnpm** package manager
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Schema Rationale
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+User  1──1  OrganizerProfile
+User  1──1  VendorProfile
+OrganizerProfile  1──*  Event
+VendorProfile     1──*  Application  *──1  Event
+VendorProfile     1──*  Document
+User              1──*  AuditLog     *──?  Event
+                                     *──?  Application
+```
 
-## Deploy on Vercel
+### Why separate profile tables?
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+**User** is a thin authentication record (email, role). Role-specific data lives in **OrganizerProfile** and **VendorProfile**:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Minimal PII**: User table stores only what auth needs. Business data (org name, shop name, phone) is isolated in profiles — easy to scope access and comply with data-minimization rules.
+- **Independent evolution**: Organizer fields (website, org name) and vendor fields (shop name, category) change at different rates. Separate tables avoid nullable-field sprawl.
+- **Clean relations**: Events belong to an OrganizerProfile (not a User), Applications belong to a VendorProfile. This makes RBAC queries natural — no need to check roles when traversing relations.
+
+### Other design decisions
+
+| Model         | Rationale |
+| ------------- | --------- |
+| **Event**     | Owns `status` lifecycle (DRAFT → OPEN → CLOSED → COMPLETED). `maxVendors` caps accepted applications. `deadline` enforces application cutoff. |
+| **Application** | Unique constraint on `(vendorId, eventId)` prevents duplicate applications. Tracks its own status independently of the event. |
+| **Document**  | MVP stores metadata only (`fileName`, `fileUrl`, `mimeType`, `sizeBytes`). Actual files live in object storage (S3 / Vercel Blob). Attached to VendorProfile, not Application, so docs persist across events. |
+| **AuditLog**  | Immutable append-only log. Links to `userId` (who), `eventId` (context), and optionally `applicationId` (what was decided on). Satisfies the compliance requirement for decision traceability. |
+
+### Seed data
+
+The seed script (`prisma/seed.ts`) creates:
+
+- 1 admin, 1 organizer (with profile), 2 vendors (with profiles)
+- 2 events: "Shibuya Spring Market 2026" (OPEN) and "Shibuya Summer Night Market" (DRAFT)
+- 3 applications (1 accepted, 2 pending)
+- 1 document (food license PDF)
+- 2 audit log entries (event published, application accepted)
+
+## Deployment
+
+Deploy to [Vercel](https://vercel.com) with a Neon PostgreSQL database. Set `DATABASE_URL` in Vercel environment variables.
