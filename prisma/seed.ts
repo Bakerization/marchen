@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { hashSync } from "bcryptjs";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
 
@@ -6,8 +7,13 @@ const connectionString = process.env.DATABASE_URL!;
 const adapter = new PrismaPg({ connectionString });
 const prisma = new PrismaClient({ adapter });
 
+// All seed users share the same password for local dev
+const SEED_PASSWORD = "password123";
+const hash = hashSync(SEED_PASSWORD, 10);
+
 async function main() {
   console.log("Seeding database...");
+  console.log(`Seed password for all users: ${SEED_PASSWORD}`);
 
   // Clean existing data (order matters for FK constraints)
   await prisma.auditLog.deleteMany();
@@ -24,6 +30,7 @@ async function main() {
     data: {
       email: "admin@marchen.local",
       name: "Admin",
+      passwordHash: hash,
       role: "ADMIN",
     },
   });
@@ -32,6 +39,7 @@ async function main() {
     data: {
       email: "organizer@marchen.local",
       name: "Tanaka Ichiro",
+      passwordHash: hash,
       role: "ORGANIZER",
     },
   });
@@ -40,6 +48,7 @@ async function main() {
     data: {
       email: "vendor1@marchen.local",
       name: "Sato Yuki",
+      passwordHash: hash,
       role: "VENDOR",
     },
   });
@@ -48,6 +57,7 @@ async function main() {
     data: {
       email: "vendor2@marchen.local",
       name: "Suzuki Hana",
+      passwordHash: hash,
       role: "VENDOR",
     },
   });
