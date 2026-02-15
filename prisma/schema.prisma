@@ -1,0 +1,99 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  ORGANIZER
+  VENDOR
+}
+
+enum EventStatus {
+  DRAFT
+  OPEN       // accepting applications
+  CLOSED     // applications closed
+  COMPLETED
+}
+
+enum ApplicationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+}
+
+model User {
+  id            String        @id @default(cuid())
+  email         String        @unique
+  name          String?
+  role          Role          @default(VENDOR)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  // Organizer relations
+  events        Event[]       @relation("OrganizerEvents")
+  auditLogs     AuditLog[]
+
+  // Vendor relations
+  applications  Application[]
+
+  @@map("users")
+}
+
+model Event {
+  id            String        @id @default(cuid())
+  title         String
+  description   String?
+  location      String?
+  eventDate     DateTime
+  deadline      DateTime      // application deadline
+  status        EventStatus   @default(DRAFT)
+  maxVendors    Int?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  organizerId   String
+  organizer     User          @relation("OrganizerEvents", fields: [organizerId], references: [id])
+
+  applications  Application[]
+  auditLogs     AuditLog[]
+
+  @@map("events")
+}
+
+model Application {
+  id            String            @id @default(cuid())
+  message       String?
+  status        ApplicationStatus @default(PENDING)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  vendorId      String
+  vendor        User              @relation(fields: [vendorId], references: [id])
+
+  eventId       String
+  event         Event             @relation(fields: [eventId], references: [id])
+
+  @@unique([vendorId, eventId])
+  @@map("applications")
+}
+
+model AuditLog {
+  id            String   @id @default(cuid())
+  action        String   // e.g. "APPLICATION_ACCEPTED", "EVENT_PUBLISHED"
+  details       String?
+  createdAt     DateTime @default(now())
+
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+
+  eventId       String?
+  event         Event?   @relation(fields: [eventId], references: [id])
+
+  @@map("audit_logs")
+}
