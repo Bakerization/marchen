@@ -6,7 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:reset": "prisma migrate reset"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.4.0",
@@ -20,6 +24,7 @@
   "pnpm": {
     "onlyBuiltDependencies": [
       "@prisma/engines",
+      "esbuild",
       "prisma"
     ]
   },
@@ -33,6 +38,7 @@
     "eslint-config-next": "16.1.6",
     "prisma": "^7.4.0",
     "tailwindcss": "^4",
+    "tsx": "^4.21.0",
     "typescript": "^5"
   }
 }
