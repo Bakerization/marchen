@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { getEvents } from "@/app/actions/events";
 
+// Render this route on-demand to avoid hitting the DB during static prerender
+export const dynamic = "force-dynamic";
+
 const STATUS_LABEL: Record<string, { label: string; bg: string; text: string }> = {
   OPEN: { label: "募集中", bg: "var(--success-light)", text: "var(--success)" },
   CLOSED: { label: "募集終了", bg: "var(--warning-light)", text: "var(--warning)" },

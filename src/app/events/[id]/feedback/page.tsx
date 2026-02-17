@@ -8,6 +8,9 @@ interface Props {
   params: Promise<{ id: string }>;
 }
 
+// Avoid static prerender; needs DB at request time
+export const dynamic = "force-dynamic";
+
 export default async function FeedbackPage({ params }: Props) {
   const { id } = await params;
   const event = await getEvent(id);

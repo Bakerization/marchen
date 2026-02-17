@@ -6,6 +6,9 @@ import { prisma } from "@/lib/prisma";
 import { ApplyForm } from "./ApplyForm";
 import { VolunteerApplyForm } from "./VolunteerApplyForm";
 
+// Avoid static prerender so DB isn't required at build time
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata({
   params,
 }: {
