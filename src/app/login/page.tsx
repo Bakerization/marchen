@@ -10,9 +10,11 @@ export default async function LoginPage() {
     <div className="flex min-h-[60vh] items-center justify-center">
       <div className="w-full max-w-sm space-y-6">
         <div>
-          <h1 className="text-2xl font-bold">Sign in to Marchen</h1>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Enter your credentials to continue
+          <h1 className="text-2xl font-bold" style={{ color: "var(--accent)" }}>
+            Marchenにログイン
+          </h1>
+          <p className="mt-1 text-sm" style={{ color: "var(--muted)" }}>
+            メールアドレスとパスワードを入力してください
           </p>
         </div>
         <LoginForm />

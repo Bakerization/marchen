@@ -25,7 +25,7 @@ export const LoginForm = () => {
     setLoading(false);
 
     if (result?.error) {
-      setError("Invalid email or password");
+      setError("メールアドレスまたはパスワードが正しくありません");
       return;
     }
 
@@ -38,9 +38,9 @@ export const LoginForm = () => {
       <div>
         <label
           htmlFor="email"
-          className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+          className="block text-sm font-medium"
         >
-          Email
+          メールアドレス
         </label>
         <input
           id="email"
@@ -48,16 +48,17 @@ export const LoginForm = () => {
           type="email"
           required
           autoComplete="email"
-          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-gray-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900"
+          className="mt-1 block w-full rounded-md px-3 py-2 text-sm shadow-sm focus:outline-none"
+          style={{ border: "1px solid var(--border)", backgroundColor: "var(--card)" }}
         />
       </div>
 
       <div>
         <label
           htmlFor="password"
-          className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+          className="block text-sm font-medium"
         >
-          Password
+          パスワード
         </label>
         <input
           id="password"
@@ -65,20 +66,22 @@ export const LoginForm = () => {
           type="password"
           required
           autoComplete="current-password"
-          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-gray-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900"
+          className="mt-1 block w-full rounded-md px-3 py-2 text-sm shadow-sm focus:outline-none"
+          style={{ border: "1px solid var(--border)", backgroundColor: "var(--card)" }}
         />
       </div>
 
       {error && (
-        <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+        <p className="text-sm" style={{ color: "var(--danger)" }}>{error}</p>
       )}
 
       <button
         type="submit"
         disabled={loading}
-        className="w-full rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-gray-200"
+        className="w-full rounded-md px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+        style={{ backgroundColor: "var(--accent)" }}
       >
-        {loading ? "Signing in..." : "Sign in"}
+        {loading ? "ログイン中..." : "ログイン"}
       </button>
     </form>
   );

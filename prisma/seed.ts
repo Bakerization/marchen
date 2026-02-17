@@ -17,6 +17,16 @@ async function main() {
 
   // Clean existing data (order matters for FK constraints)
   await prisma.auditLog.deleteMany();
+  await prisma.notification.deleteMany();
+  await prisma.weatherAlert.deleteMany();
+  await prisma.salesRecord.deleteMany();
+  await prisma.volunteerInvite.deleteMany();
+  await prisma.staffingPlan.deleteMany();
+  await prisma.equipmentBooking.deleteMany();
+  await prisma.meetingSlot.deleteMany();
+  await prisma.vendorTarget.deleteMany();
+  await prisma.budget.deleteMany();
+  await prisma.oAuthToken.deleteMany();
   await prisma.application.deleteMany();
   await prisma.document.deleteMany();
   await prisma.event.deleteMany();
@@ -160,6 +170,43 @@ async function main() {
       vendorId: vendorProfile1.id,
       eventId: event2.id,
     },
+  });
+
+  // --- Meeting / Targets seed -----------------------------------------
+  const vendorTarget1 = await prisma.vendorTarget.create({
+    data: {
+      vendorName: vendorProfile1.shopName,
+      priority: "MUST_HAVE",
+      status: "CONTACTED",
+      notes: "Top pick bakery",
+      eventId: event1.id,
+      vendorProfileId: vendorProfile1.id,
+    },
+  });
+
+  await prisma.meetingSlot.createMany({
+    data: [
+      {
+        eventId: event1.id,
+        start: new Date("2026-03-05T02:00:00Z"),
+        end: new Date("2026-03-05T02:30:00Z"),
+        status: "PENDING",
+        notes: "Sato's Kitchen intro",
+        organizerId: organizerUser.id,
+        vendorTargetId: vendorTarget1.id,
+        vendorProfileId: vendorProfile1.id,
+      },
+      {
+        eventId: event1.id,
+        start: new Date("2026-03-06T09:00:00Z"),
+        end: new Date("2026-03-06T09:30:00Z"),
+        status: "CONFIRMED",
+        notes: "Follow-up with Sato",
+        organizerId: organizerUser.id,
+        vendorTargetId: vendorTarget1.id,
+        vendorProfileId: vendorProfile1.id,
+      },
+    ],
   });
 
   // --- Audit Logs ------------------------------------------------------

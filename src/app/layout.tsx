@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Marchen — Market Management",
-  description: "Connect organizers and vendors to run markets",
+  title: "Marchen — パンマルシェ運営プラットフォーム",
+  description: "地方公共団体とパン屋をつなぐマルシェ運営プラットフォーム",
 };
 
 export default function RootLayout({
@@ -25,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="ja">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
