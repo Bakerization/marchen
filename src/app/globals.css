@@ -1,24 +1,24 @@
 @import "tailwindcss";
 
 :root {
-  --background: #FFF8F0;
-  --foreground: #5C4A3A;
-  --accent: #E07B39;
-  --accent-hover: #C96A2E;
-  --accent-light: #FDF0E2;
-  --accent-lighter: #FFF5EB;
-  --border: #F0D9C0;
-  --border-dark: #D4A574;
-  --muted: #A89279;
-  --card: #FFFAF4;
-  --success: #5D8A3C;
-  --success-light: #EAF4E0;
-  --danger: #C44B3F;
-  --danger-light: #FDEAE8;
+  --background: #2A2520;
+  --foreground: #E8DDD0;
+  --accent: #C47B5A;
+  --accent-hover: #D48A68;
+  --accent-light: #3A3230;
+  --accent-lighter: #332C28;
+  --border: #3E3630;
+  --border-dark: #5A4E44;
+  --muted: #9B8E80;
+  --card: #322B26;
+  --success: #6B9E48;
+  --success-light: #2A3225;
+  --danger: #D45A4E;
+  --danger-light: #3A2825;
   --warning: #D4943A;
-  --warning-light: #FFF3D6;
-  --info: #4A7FB5;
-  --info-light: #E8F0F8;
+  --warning-light: #3A3225;
+  --info: #5A8FC5;
+  --info-light: #252E3A;
 }
 
 @theme inline {
@@ -28,26 +28,26 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: light) {
   :root {
-    --background: #1E1410;
-    --foreground: #F5E6D3;
-    --accent: #E8944D;
-    --accent-hover: #F0A060;
-    --accent-light: #2D1F14;
-    --accent-lighter: #261A10;
-    --border: #3D2C1E;
-    --border-dark: #5A4030;
-    --muted: #A69080;
-    --card: #261A10;
-    --success: #6B9E48;
-    --success-light: #1A2A10;
-    --danger: #D45A4E;
-    --danger-light: #2A1210;
-    --warning: #E0A44A;
-    --warning-light: #2A2010;
-    --info: #5A8FC5;
-    --info-light: #101A2A;
+    --background: #FAF4EE;
+    --foreground: #3A302A;
+    --accent: #C47B5A;
+    --accent-hover: #B06A4A;
+    --accent-light: #F0E4DA;
+    --accent-lighter: #F5EDE5;
+    --border: #E0D4C8;
+    --border-dark: #C4B4A4;
+    --muted: #8A7E72;
+    --card: #FFFFFF;
+    --success: #5D8A3C;
+    --success-light: #EAF4E0;
+    --danger: #C44B3F;
+    --danger-light: #FDEAE8;
+    --warning: #D4943A;
+    --warning-light: #FFF3D6;
+    --info: #4A7FB5;
+    --info-light: #E8F0F8;
   }
 }
 
@@ -57,7 +57,7 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* Custom utility classes for the orange/cream theme */
+/* Custom utility classes */
 .btn-primary {
   background-color: var(--accent);
   color: white;
