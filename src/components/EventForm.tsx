@@ -260,16 +260,45 @@ export const EventForm = ({ event }: EventFormProps) => {
 
             {/* Messages area */}
             <div style={{ flex: 1, overflowY: "auto", padding: "20px 24px", display: "flex", flexDirection: "column", gap: 16 }}>
-              {chatMessages.map((msg, i) => (
-                <div key={`${msg.role}-${i}`} style={{ display: "flex", flexDirection: "column", alignItems: msg.role === "user" ? "flex-end" : "flex-start", gap: 4, maxWidth: "75%", alignSelf: msg.role === "user" ? "flex-end" : "flex-start" }}>
-                  <span style={{ fontSize: 10, fontWeight: 600, color: "var(--muted)", paddingLeft: 4 }}>
-                    {msg.role === "assistant" ? "✦ AI" : "あなた"}
-                  </span>
-                  <div style={{ whiteSpace: "pre-wrap", lineHeight: 1.65, fontSize: 14, padding: "10px 14px", borderRadius: msg.role === "user" ? "18px 18px 4px 18px" : "4px 18px 18px 18px", backgroundColor: msg.role === "user" ? "var(--accent)" : "var(--card)", color: msg.role === "user" ? "white" : "var(--foreground)", border: "1px solid var(--border)" }}>
-                    {msg.content}
+              {chatMessages.map((msg, i) => {
+                const isUser = msg.role === "user";
+                return (
+                  <div
+                    key={`${msg.role}-${i}`}
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: isUser ? "flex-end" : "flex-start",
+                      gap: 4,
+                      maxWidth: "78%",
+                      alignSelf: isUser ? "flex-end" : "flex-start",
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: 10,
+                        fontWeight: 600,
+                        color: "var(--muted)",
+                        paddingLeft: isUser ? 0 : 4,
+                        paddingRight: isUser ? 4 : 0,
+                      }}
+                    >
+                      {isUser ? "あなた" : "✦ AI"}
+                    </span>
+                    <div
+                      style={{
+                        padding: "10px 14px",
+                        borderRadius: isUser ? "18px 18px 4px 18px" : "4px 18px 18px 18px",
+                        backgroundColor: isUser ? "var(--accent)" : "var(--card)",
+                        color: isUser ? "white" : "var(--foreground)",
+                        border: "1px solid var(--border)",
+                      }}
+                    >
+                      <ChatMarkdown content={msg.content} isUser={isUser} />
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
               {chatLoading && (
                 <div style={{ alignSelf: "flex-start" }}>
                   <TypingDots />
@@ -439,6 +468,110 @@ export const EventForm = ({ event }: EventFormProps) => {
       )}
     </>
   );
+};
+
+// ── Markdown renderer (no external dependency) ──
+
+const parseInline = (text: string, isUser: boolean): React.ReactNode[] =>
+  text.split(/(\*\*[^*\n]+\*\*|\*[^*\n]+\*|`[^`\n]+`)/g).map((seg, i) => {
+    if (/^\*\*(.+)\*\*$/.test(seg))
+      return <strong key={i}>{seg.slice(2, -2)}</strong>;
+    if (/^\*([^*]+)\*$/.test(seg))
+      return <em key={i}>{seg.slice(1, -1)}</em>;
+    if (/^`([^`]+)`$/.test(seg))
+      return (
+        <code
+          key={i}
+          style={{
+            backgroundColor: isUser ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.12)",
+            borderRadius: 3,
+            padding: "1px 5px",
+            fontSize: 12,
+            fontFamily: "monospace",
+          }}
+        >
+          {seg.slice(1, -1)}
+        </code>
+      );
+    return seg;
+  });
+
+const ChatMarkdown = ({ content, isUser }: { content: string; isUser: boolean }) => {
+  const nodes: React.ReactNode[] = [];
+  const lines = content.split("\n");
+  let i = 0;
+
+  while (i < lines.length) {
+    const line = lines[i];
+
+    // Headings
+    if (/^#{1,3} /.test(line)) {
+      const level = (line.match(/^(#{1,3}) /)?.[1].length ?? 2) - 1;
+      const text = line.replace(/^#{1,3} /, "");
+      const sizes = ["15px", "14px", "13px"];
+      nodes.push(
+        <p key={i} style={{ fontWeight: 700, fontSize: sizes[level], marginTop: 10, marginBottom: 2 }}>
+          {parseInline(text, isUser)}
+        </p>,
+      );
+      i++;
+      continue;
+    }
+
+    // Unordered list (collect consecutive items)
+    if (/^[-*] /.test(line)) {
+      const items: React.ReactNode[] = [];
+      while (i < lines.length && /^[-*] /.test(lines[i])) {
+        items.push(<li key={i}>{parseInline(lines[i].slice(2), isUser)}</li>);
+        i++;
+      }
+      nodes.push(
+        <ul key={`ul-${i}`} style={{ listStyleType: "disc", paddingLeft: 18, margin: "4px 0" }}>
+          {items}
+        </ul>,
+      );
+      continue;
+    }
+
+    // Ordered list
+    if (/^\d+\. /.test(line)) {
+      const items: React.ReactNode[] = [];
+      while (i < lines.length && /^\d+\. /.test(lines[i])) {
+        items.push(<li key={i}>{parseInline(lines[i].replace(/^\d+\. /, ""), isUser)}</li>);
+        i++;
+      }
+      nodes.push(
+        <ol key={`ol-${i}`} style={{ listStyleType: "decimal", paddingLeft: 18, margin: "4px 0" }}>
+          {items}
+        </ol>,
+      );
+      continue;
+    }
+
+    // Horizontal rule
+    if (/^---+$/.test(line.trim())) {
+      nodes.push(<hr key={i} style={{ border: "none", borderTop: "1px solid rgba(128,128,128,0.3)", margin: "8px 0" }} />);
+      i++;
+      continue;
+    }
+
+    // Blank line → small gap
+    if (line === "") {
+      nodes.push(<div key={`gap-${i}`} style={{ height: 6 }} />);
+      i++;
+      continue;
+    }
+
+    // Normal paragraph line
+    nodes.push(
+      <p key={i} style={{ margin: "1px 0", lineHeight: 1.7 }}>
+        {parseInline(line, isUser)}
+      </p>,
+    );
+    i++;
+  }
+
+  return <div style={{ fontSize: 14 }}>{nodes}</div>;
 };
 
 // ── Sub-components ──

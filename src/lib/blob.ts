@@ -1,3 +1,5 @@
+import { put } from "@vercel/blob";
+
 const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
 
 const sanitizeFilename = (value: string) =>
@@ -43,28 +45,14 @@ export const uploadImageToBlob = async (params: {
     .join("/");
   const blobPath = `${safePrefix || "uploads"}/${filename}`;
 
-  const uploadRes = await fetch("https://blob.vercel-storage.com", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "x-vercel-filename": blobPath,
-      "content-type": file.type,
-    },
-    body: Buffer.from(await file.arrayBuffer()),
+  const blob = await put(blobPath, file, {
+    access: "public",
+    token,
+    contentType: file.type,
   });
 
-  if (!uploadRes.ok) {
-    const message = await uploadRes.text();
-    throw new Error(`Blob upload failed: ${uploadRes.status} ${message}`);
-  }
-
-  const payload = (await uploadRes.json()) as { url?: string };
-  if (!payload.url) {
-    throw new Error("Blob upload did not return a URL");
-  }
-
   return {
-    url: payload.url,
+    url: blob.url,
     fileName: filename,
     mimeType: file.type,
     sizeBytes: file.size,

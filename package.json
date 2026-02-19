@@ -20,6 +20,7 @@
     "@ai-sdk/openai": "^3.0.29",
     "@prisma/adapter-pg": "^7.4.0",
     "@prisma/client": "^7.4.0",
+    "@vercel/blob": "^2.2.0",
     "ai": "^6.0.86",
     "bcryptjs": "^3.0.3",
     "date-fns": "^4.1.0",

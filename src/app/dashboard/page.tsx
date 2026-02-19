@@ -11,6 +11,9 @@ export default async function DashboardPage() {
   const isOrganizerLike = user.role === "ORGANIZER" || user.role === "ADMIN";
   const isVendorLike = user.role === "VENDOR" || user.role === "ADMIN";
 
+  // Organizers go directly to their event hub
+  if (user.role === "ORGANIZER") redirect("/organizer/events");
+
   const organizerProfile = isOrganizerLike
     ? await prisma.organizerProfile.findUnique({ where: { userId: user.id } })
     : null;
