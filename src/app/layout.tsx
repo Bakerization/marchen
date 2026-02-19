@@ -17,6 +17,16 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Marchen — パンマルシェ運営プラットフォーム",
   description: "地方公共団体とパン屋をつなぐマルシェ運営プラットフォーム",
+  icons: {
+    icon: [
+      {
+        url: "/marchen.png",
+        type: "image/png",
+        sizes: "256x256",
+      },
+    ],
+    shortcut: "/marchen.png",
+  },
 };
 
 export default function RootLayout({

@@ -7,11 +7,11 @@ export default function Home() {
       {/* Hero section */}
       <div className="relative overflow-hidden rounded-2xl">
         <Image
-          src="/library.jpeg"
-          alt="パンマルシェの風景"
-          width={1200}
-          height={500}
-          className="w-full h-[400px] object-cover"
+          src="/hero.png"
+          alt="パンマルシェのキービジュアル"
+          width={1600}
+          height={550}
+          className="w-full h-[420px] object-cover"
           priority
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
