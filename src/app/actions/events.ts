@@ -8,11 +8,22 @@ import { logAudit } from "@/lib/audit";
 // ── Helpers ──────────────────────────────────────────────────────────────
 
 const getOrgProfile = async (userId: string) => {
-  const profile = await prisma.organizerProfile.findUnique({
+  return prisma.organizerProfile.findUnique({
     where: { userId },
   });
-  if (!profile) throw new Error("Organizer profile not found");
-  return profile;
+};
+
+const getOrCreateOrgProfile = async (user: { id: string; email: string; name: string | null }) => {
+  const existing = await getOrgProfile(user.id);
+  if (existing) return existing;
+
+  const fallbackOrgName = user.name?.trim() || user.email.split("@")[0] || "Organizer";
+  return prisma.organizerProfile.create({
+    data: {
+      userId: user.id,
+      organizationName: fallbackOrgName,
+    },
+  });
 };
 
 const assertEventOwner = async (eventId: string, userId: string, role: string) => {
@@ -32,7 +43,15 @@ const assertEventOwner = async (eventId: string, userId: string, role: string) =
 export const getEvents = async () => {
   return prisma.event.findMany({
     where: { status: { in: ["OPEN", "CLOSED", "COMPLETED"] } },
-    include: { organizer: true, _count: { select: { applications: true } } },
+    include: {
+      organizer: true,
+      _count: { select: { applications: true } },
+      photos: {
+        where: { type: { in: ["HERO", "VENUE", "GALLERY"] } },
+        orderBy: { createdAt: "desc" },
+        take: 1,
+      },
+    },
     orderBy: { eventDate: "asc" },
   });
 };
@@ -40,7 +59,18 @@ export const getEvents = async () => {
 export const getMyEvents = async () => {
   const user = await requireAuth();
   requireOrganizer(user);
+
+  if (user.role === "ADMIN") {
+    return prisma.event.findMany({
+      include: { _count: { select: { applications: true } } },
+      orderBy: { eventDate: "asc" },
+    });
+  }
+
   const profile = await getOrgProfile(user.id);
+  if (!profile) {
+    return [];
+  }
 
   return prisma.event.findMany({
     where: { organizerId: profile.id },
@@ -52,7 +82,12 @@ export const getMyEvents = async () => {
 export const getEvent = async (eventId: string) => {
   return prisma.event.findUnique({
     where: { id: eventId },
-    include: { organizer: true },
+    include: {
+      organizer: true,
+      photos: {
+        orderBy: [{ type: "asc" }, { createdAt: "desc" }],
+      },
+    },
   });
 };
 
@@ -80,7 +115,7 @@ export const createEvent = async (data: {
 }) => {
   const user = await requireAuth();
   requireOrganizer(user);
-  const profile = await getOrgProfile(user.id);
+  const profile = await getOrCreateOrgProfile(user);
 
   const event = await prisma.event.create({
     data: {

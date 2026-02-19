@@ -4,21 +4,48 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+const DEMO_USERS = [
+  {
+    label: "主催者",
+    email: "organizer@marchen.local",
+    password: "password123",
+    description: "マルシェを企画・運営する自治体担当者",
+  },
+  {
+    label: "出店者1",
+    email: "vendor1@marchen.local",
+    password: "password123",
+    description: "パン屋「Sato's Kitchen」",
+  },
+  {
+    label: "出店者2",
+    email: "vendor2@marchen.local",
+    password: "password123",
+    description: "「Hana Crafts」",
+  },
+  {
+    label: "管理者",
+    email: "admin@marchen.local",
+    password: "password123",
+    description: "全権限を持つ管理者",
+  },
+] as const;
+
 export const LoginForm = () => {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
 
-    const formData = new FormData(e.currentTarget);
-
     const result = await signIn("credentials", {
-      email: formData.get("email") as string,
-      password: formData.get("password") as string,
+      email,
+      password,
       redirect: false,
     });
 
@@ -35,6 +62,28 @@ export const LoginForm = () => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <p className="text-sm font-medium">デモユーザーを選択（今だけ）</p>
+        <div className="grid gap-2">
+          {DEMO_USERS.map((user) => (
+            <button
+              key={user.email}
+              type="button"
+              onClick={() => {
+                setEmail(user.email);
+                setPassword(user.password);
+                setError(null);
+              }}
+              className="rounded-md px-3 py-2 text-left text-sm"
+              style={{ border: "1px solid var(--border)", backgroundColor: "var(--accent-light)" }}
+            >
+              <p className="font-medium" style={{ color: "var(--accent)" }}>{user.label}</p>
+              <p className="text-xs" style={{ color: "var(--muted)" }}>{user.description}</p>
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div>
         <label
           htmlFor="email"
@@ -48,6 +97,8 @@ export const LoginForm = () => {
           type="email"
           required
           autoComplete="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           className="mt-1 block w-full rounded-md px-3 py-2 text-sm shadow-sm focus:outline-none"
           style={{ border: "1px solid var(--border)", backgroundColor: "var(--card)" }}
         />
@@ -66,6 +117,8 @@ export const LoginForm = () => {
           type="password"
           required
           autoComplete="current-password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
           className="mt-1 block w-full rounded-md px-3 py-2 text-sm shadow-sm focus:outline-none"
           style={{ border: "1px solid var(--border)", backgroundColor: "var(--card)" }}
         />

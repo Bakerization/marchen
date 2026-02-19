@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/session";
 import { getMyEvents } from "@/app/actions/events";
+import { AppSidebarShell } from "@/components/AppSidebarShell";
 
 const STATUS_LABEL: Record<string, { label: string; bg: string; text: string }> = {
   DRAFT: { label: "下書き", bg: "var(--accent-light)", text: "var(--muted)" },
@@ -18,7 +19,8 @@ export default async function OrganizerEventsPage() {
   const events = await getMyEvents();
 
   return (
-    <div className="space-y-6">
+    <AppSidebarShell user={user}>
+      <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">マイイベント</h1>
         <Link
@@ -73,6 +75,20 @@ export default async function OrganizerEventsPage() {
                   >
                     AIチャット
                   </Link>
+                  <Link
+                    href={`/organizer/events/${event.id}/next-steps`}
+                    className="text-sm"
+                    style={{ color: "var(--accent)" }}
+                  >
+                    次やること
+                  </Link>
+                  <Link
+                    href={`/organizer/events/${event.id}/plan`}
+                    className="text-sm"
+                    style={{ color: "var(--accent)" }}
+                  >
+                    計画ダッシュボード
+                  </Link>
                   {event.status === "DRAFT" && (
                     <Link
                       href={`/organizer/events/${event.id}/edit`}
@@ -88,6 +104,7 @@ export default async function OrganizerEventsPage() {
           })}
         </div>
       )}
-    </div>
+      </div>
+    </AppSidebarShell>
   );
 }

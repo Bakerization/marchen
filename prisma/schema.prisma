@@ -75,6 +75,22 @@ enum NotificationStatus {
   FAILED
 }
 
+enum EventPhotoType {
+  HERO
+  VENUE
+  MAP
+  POSTER
+  GALLERY
+}
+
+enum VendorPhotoType {
+  LOGO
+  SHOP
+  PRODUCT
+  MENU
+  OTHER
+}
+
 // ---------------------------------------------------------------------------
 // User  — minimal auth record; role-specific data lives in profile tables
 // ---------------------------------------------------------------------------
@@ -135,6 +151,7 @@ model VendorProfile {
 
   applications  Application[]
   documents     Document[]
+  photos        VendorPhoto[]
   vendorTargets VendorTarget[]
   meetingSlots  MeetingSlot[]
   notifications Notification[]
@@ -163,6 +180,7 @@ model Event {
 
   applications Application[]
   auditLogs    AuditLog[]
+  photos       EventPhoto[]
 
   // Planning & operations
   budgets           Budget[]
@@ -219,6 +237,42 @@ model Document {
   vendor   VendorProfile @relation(fields: [vendorId], references: [id], onDelete: Cascade)
 
   @@map("documents")
+}
+
+model EventPhoto {
+  id        String         @id @default(cuid())
+  imageUrl  String
+  fileName  String
+  mimeType  String?
+  sizeBytes Int?
+  type      EventPhotoType @default(GALLERY)
+  caption   String?
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  eventId String
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId, type])
+  @@map("event_photos")
+}
+
+model VendorPhoto {
+  id        String          @id @default(cuid())
+  imageUrl  String
+  fileName  String
+  mimeType  String?
+  sizeBytes Int?
+  type      VendorPhotoType @default(PRODUCT)
+  caption   String?
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  vendorId String
+  vendor   VendorProfile @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+  @@index([vendorId, type])
+  @@map("vendor_photos")
 }
 
 // ---------------------------------------------------------------------------

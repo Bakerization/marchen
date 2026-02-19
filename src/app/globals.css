@@ -101,6 +101,22 @@ body {
   transition: background-color 180ms ease, color 180ms ease;
 }
 
+/* Global hover glow for interactive elements */
+:where(a, button, [role="button"], .hover-glow) {
+  transition:
+    box-shadow 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    background-color 180ms ease,
+    transform 180ms ease;
+}
+
+:where(a, button, [role="button"], .hover-glow):hover {
+  box-shadow:
+    0 0 0 1px var(--accent),
+    0 0 18px color-mix(in srgb, var(--accent) 26%, transparent);
+}
+
 /* Custom utility classes */
 .btn-primary {
   background-color: var(--accent);

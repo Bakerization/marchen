@@ -47,6 +47,9 @@ export default async function EventApplicationsPage({
           <Link href={`/organizer/events/${event.id}/sales`} style={{ color: "var(--accent)" }}>売上</Link>
           <Link href={`/organizer/events/${event.id}/spec`} style={{ color: "var(--accent)" }}>仕様書</Link>
           <Link href={`/organizer/events/${event.id}/reports`} style={{ color: "var(--accent)" }}>レポート</Link>
+          <Link href="/dashboard/media" style={{ color: "var(--accent)" }}>写真設定</Link>
+          <Link href={`/organizer/events/${event.id}/next-steps`} style={{ color: "var(--accent)" }}>次やること</Link>
+          <Link href={`/organizer/events/${event.id}/plan`} style={{ color: "var(--accent)" }}>計画ダッシュボード</Link>
         </div>
       </div>
 

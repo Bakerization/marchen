@@ -1,8 +1,12 @@
 import Link from "next/link";
+import { getSessionUser } from "@/lib/session";
+import { AppSidebarShell } from "@/components/AppSidebarShell";
 
-export default function GuidePage() {
+export default async function GuidePage() {
+  const user = await getSessionUser();
   return (
-    <div className="py-8 space-y-10 max-w-3xl mx-auto">
+    <AppSidebarShell user={user}>
+      <div className="py-2 space-y-10 max-w-4xl">
       <div>
         <h1 className="text-3xl font-bold" style={{ color: "var(--accent)" }}>
           Marchenの使い方
@@ -238,6 +242,7 @@ export default function GuidePage() {
           さっそく試してみる
         </Link>
       </div>
-    </div>
+      </div>
+    </AppSidebarShell>
   );
 }

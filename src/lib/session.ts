@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import type { SessionUser } from "@/types/auth";
+import { prisma } from "@/lib/prisma";
 
 /**
  * Get the current session user, or null if not authenticated.
@@ -7,12 +8,30 @@ import type { SessionUser } from "@/types/auth";
  */
 export const getSessionUser = async (): Promise<SessionUser | null> => {
   const session = await auth();
-  if (!session?.user?.id) return null;
+  const sessionUser = session?.user;
+  if (!sessionUser?.email) return null;
+
+  // Resolve against DB so stale JWT IDs after DB resets do not break FK relations.
+  const dbUserById = sessionUser.id
+    ? await prisma.user.findUnique({
+        where: { id: sessionUser.id },
+        select: { id: true, email: true, name: true, role: true },
+      })
+    : null;
+  const dbUser =
+    dbUserById ??
+    (await prisma.user.findUnique({
+      where: { email: sessionUser.email },
+      select: { id: true, email: true, name: true, role: true },
+    }));
+
+  if (!dbUser) return null;
+
   return {
-    id: session.user.id,
-    email: session.user.email,
-    name: session.user.name ?? null,
-    role: session.user.role,
+    id: dbUser.id,
+    email: dbUser.email,
+    name: dbUser.name ?? null,
+    role: dbUser.role,
   };
 };
 

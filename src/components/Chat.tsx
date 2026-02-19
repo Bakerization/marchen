@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { Fragment, useState, useRef, useEffect } from "react";
 import { sendMessage } from "@/app/actions/chat";
 
 interface Message {
@@ -52,7 +52,7 @@ export const Chat = ({ threadId, initialMessages }: ChatProps) => {
           createdAt: assistantMsg.createdAt,
         },
       ]);
-    } catch (err) {
+    } catch {
       const errorMsg: Message = {
         id: `error-${Date.now()}`,
         role: "assistant",
@@ -62,6 +62,13 @@ export const Chat = ({ threadId, initialMessages }: ChatProps) => {
       setMessages((prev) => [...prev, errorMsg]);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+      e.preventDefault();
+      e.currentTarget.form?.requestSubmit();
     }
   };
 
@@ -89,7 +96,7 @@ export const Chat = ({ threadId, initialMessages }: ChatProps) => {
                   : "bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-100"
               }`}
             >
-              {msg.content}
+              {msg.role === "assistant" ? <MarkdownText text={msg.content} /> : msg.content}
             </div>
           </div>
         ))}
@@ -108,14 +115,15 @@ export const Chat = ({ threadId, initialMessages }: ChatProps) => {
         onSubmit={handleSubmit}
         className="border-t border-gray-200 p-4 dark:border-gray-800"
       >
-        <div className="flex gap-2">
-          <input
-            type="text"
+        <div className="flex gap-2 items-end">
+          <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="メッセージを入力..."
+            onKeyDown={handleKeyDown}
+            placeholder="メッセージを入力...（Ctrl/Cmd + Enterで送信）"
             disabled={isLoading}
-            className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none disabled:opacity-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+            rows={3}
+            className="flex-1 resize-y rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none disabled:opacity-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
           />
           <button
             type="submit"
@@ -127,5 +135,75 @@ export const Chat = ({ threadId, initialMessages }: ChatProps) => {
         </div>
       </form>
     </div>
+  );
+};
+
+const MarkdownText = ({ text }: { text: string }) => {
+  const lines = text.replace(/\r\n/g, "\n").split("\n");
+
+  return (
+    <div className="space-y-1">
+      {lines.map((line, index) => {
+        const trimmed = line.trim();
+        if (!trimmed) {
+          return <div key={`empty-${index}`} className="h-2" />;
+        }
+        if (trimmed.startsWith("### ")) {
+          return (
+            <h3 key={`h3-${index}`} className="text-sm font-semibold">
+              <InlineMarkdown text={trimmed.slice(4)} />
+            </h3>
+          );
+        }
+        if (trimmed.startsWith("## ")) {
+          return (
+            <h2 key={`h2-${index}`} className="text-base font-semibold">
+              <InlineMarkdown text={trimmed.slice(3)} />
+            </h2>
+          );
+        }
+        if (trimmed.startsWith("# ")) {
+          return (
+            <h1 key={`h1-${index}`} className="text-base font-bold">
+              <InlineMarkdown text={trimmed.slice(2)} />
+            </h1>
+          );
+        }
+        if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
+          return (
+            <p key={`li-${index}`} className="flex gap-2">
+              <span>•</span>
+              <span><InlineMarkdown text={trimmed.slice(2)} /></span>
+            </p>
+          );
+        }
+        return (
+          <p key={`p-${index}`}>
+            <InlineMarkdown text={line} />
+          </p>
+        );
+      })}
+    </div>
+  );
+};
+
+const InlineMarkdown = ({ text }: { text: string }) => {
+  const chunks = text.split(/(\*\*[^*]+\*\*|`[^`]+`)/g).filter(Boolean);
+  return (
+    <>
+      {chunks.map((chunk, i) => {
+        if (chunk.startsWith("**") && chunk.endsWith("**")) {
+          return <strong key={`b-${i}`}>{chunk.slice(2, -2)}</strong>;
+        }
+        if (chunk.startsWith("`") && chunk.endsWith("`")) {
+          return (
+            <code key={`c-${i}`} className="rounded px-1" style={{ backgroundColor: "var(--accent-light)" }}>
+              {chunk.slice(1, -1)}
+            </code>
+          );
+        }
+        return <Fragment key={`t-${i}`}>{chunk}</Fragment>;
+      })}
+    </>
   );
 };
